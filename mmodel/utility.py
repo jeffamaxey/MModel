@@ -32,10 +32,11 @@ def model_signature(graph):
     parameters = {}
     for sig in nx.get_node_attributes(graph, "sig").values():
         for pname, param in sig.parameters.items():
-            if pname in parameters:
-                if param_sorter(parameters[pname]) >= param_sorter(param):
-                    continue
-            parameters.update({pname: param})
+            if pname in parameters and param_sorter(
+                parameters[pname]
+            ) >= param_sorter(param):
+                continue
+            parameters[pname] = param
 
     for returns in nx.get_node_attributes(graph, "returns").values():
         for rt in returns:
@@ -59,9 +60,7 @@ def model_returns(graph):
     for edge in graph.edges():
         intermediate.extend(graph.edges[edge]['val'])
 
-    final_returns = list(set(returns) - set(intermediate))
-    final_returns.sort()
-    return final_returns
+    return sorted(set(returns) - set(intermediate))
 
 
 def replace_signature(signature, replacement_dict):
@@ -95,12 +94,7 @@ def graph_topological_sort(graph):
 
     """
 
-    topological_order = []
-
-    for node in nx.topological_sort(graph):
-        topological_order.append((node, graph.nodes[node]))
-
-    return topological_order
+    return [(node, graph.nodes[node]) for node in nx.topological_sort(graph)]
 
 
 def param_counter(graph, returns):
@@ -154,13 +148,16 @@ def modify_subgraph(
 
     new_edges = []
     for node in subgraph.nodes():
-        for parent in graph.predecessors(node):
-            if parent not in subgraph:
-                new_edges.append((parent, subgraph_name))
-        for child in graph.successors(node):
-            if child not in subgraph:
-                new_edges.append((subgraph_name, child))
-
+        new_edges.extend(
+            (parent, subgraph_name)
+            for parent in graph.predecessors(node)
+            if parent not in subgraph
+        )
+        new_edges.extend(
+            (subgraph_name, child)
+            for child in graph.successors(node)
+            if child not in subgraph
+        )
     graph.remove_nodes_from(subgraph.nodes)
     # remove unique edges
     graph.add_edges_from(set(new_edges))

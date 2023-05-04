@@ -35,9 +35,7 @@ class TopologicalHandler:
         for node, node_attr in self.order:
             self.run_node(data, node, node_attr)
 
-        result = self.finish(data, self.returns)
-
-        return result
+        return self.finish(data, self.returns)
 
     def run_node(self, data, node, node_attr):
         """Run individual node"""
@@ -99,14 +97,12 @@ class MemData(UserDict):
 
         self.counter[key] -= 1
 
-        if self.counter[key] == 0:
-            # return the value and delete the key in dictionary
-            value = super().__getitem__(key)
-            del self[key]
-            return value
-
-        else:
+        if self.counter[key] != 0:
             return super().__getitem__(key)
+        # return the value and delete the key in dictionary
+        value = super().__getitem__(key)
+        del self[key]
+        return value
 
 
 class H5Data:

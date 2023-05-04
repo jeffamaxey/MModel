@@ -38,7 +38,7 @@ class Model:
         # modify self.graph does not change the model itself
         # self.graph = nx.freeze(graph.deepcopy())
         self.graph = nx.freeze(graph)
-        self.modifiers = modifiers or list()
+        self.modifiers = modifiers or []
         self.handler = handler
         self.description = description
 
